@@ -11,24 +11,10 @@ Lab 1: Peer-to-Peer File System
 3. **System Description** 
 	The system is divided into two parts: server, and client. As mentioned above, the server acts as a center that supports multiple connection. If a peer wants to download a file from other peers, it has to first connect to the server to get the information about the file. The client serves as an end-point for downloading. 
 	The requests that the system supports are: register, listing, location, and leave, each side has its response to the request:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	![Alt text](https://github.com/OscarLi9328/centralized_P2P/blob/master/system_description.png?raw=true "Optional Title")
 
 Below is a figure that shows the concept of the operation on both sides.
+
+![Alt text](https://github.com/OscarLi9328/centralized_P2P/blob/master/elaborate.png?raw=true "Optional Title")
 
 
