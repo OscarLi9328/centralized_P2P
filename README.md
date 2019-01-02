@@ -1,5 +1,5 @@
 # centralized_P2P
-Lab 1: Peer-to-Peer File System
+## Peer-to-Peer File System
 1. **Objective**
 	This lab aims to utilize the TCP/IP protocols to implement centralized peer-to-peer system, where there exists a central server that controls the file exchanging procedures.
 	
