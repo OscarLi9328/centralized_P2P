@@ -1,5 +1,5 @@
 import socket, threading, time
-import os
+import os, sys
 import json
 
 port = 12345
@@ -13,11 +13,11 @@ fileNum = len(cFile)
 buff_size = 1024
 
 # create peer-server socket
-def makePeerServSock(peer_port): 
+def makePeerServSock(addr, peer_port): 
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	print('socket created')
 	localIP = sock.getsockname()[0]
-	sock.bind(('', peer_port))
+	sock.bind((addr, peer_port))
 	sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	sock.listen(5)
 	print('Listening...')
@@ -28,19 +28,21 @@ def makePeerServSock(peer_port):
 def makeServSock(addr):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect((addr, port))
+
 	return sock
 
 # operations that deals with peers
-def ToPeer(peer_port):
-	PeerSock = makePeerServSock(peer_port)
+def ToPeer(addr, peer_port):
+	PeerSock = makePeerServSock(addr, peer_port)
 	while True:
 		peer_client_sock, peer_client_addr = connection(PeerSock)
 		t = threading.Thread(target = fileTransmit, args = [peer_client_sock])
 		t.start()
+	sys.exit(0)
 
 def ToServ(addr, peer_port):
 	ServSock = makeServSock(addr)
-	print(ServSock.recv(buff_size).decode()) # welcom to P2P connection!
+	print(ServSock.recv(buff_size).decode()) # welcome to P2P connection!
 	peer_info = [addr, peer_port]
 	j_peer_info = json.dumps(peer_info)
 	ServSock.send(j_peer_info.encode())
@@ -58,7 +60,6 @@ def ToServ(addr, peer_port):
 				ServSock.send(j_file.encode())
 				time.sleep(0.1)
 			print(ServSock.recv(buff_size).decode()) # the server reply
-
 
 		elif request == 'list':
 			print('num of files: ', ServSock.recv(buff_size).decode()) # receive the file list
@@ -82,10 +83,13 @@ def ToServ(addr, peer_port):
 			print('File', fileName, 'has been downloaded.')
 
 		elif request == 'leave':
-			return 
+			print(request)
+			ServSock.close()
+			os._exit(1)
 		else:
 			print(ServSock.recv(buff_size).decode())
 			continue
+		time.sleep(0.1)
 
 def download(peer_info, fileName):
 	newPath = './receiving'
@@ -98,7 +102,7 @@ def download(peer_info, fileName):
 	peerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	peerSock.connect((peer_addr, peer_port))
 
-	file_path = newPath + fileName
+	file_path = newPath + '/' + fileName
 	print(file_path)
 	while True:
 		data = peerSock.recv(buff_size)
@@ -112,15 +116,15 @@ def download(peer_info, fileName):
 	# print(cFile)
 
 	peerSock.close()
+	os.chdir('../')
 	return 
-
 
 def fileTransmit(clientPeer_sock):
 	# addr = clientPeer_sock.getsockname()
 	fn = clientPeer_sock.recv(buff_size).decode()
-	# print(fn)
+	print(fn)
 	fp = './' + fn
-
+	print(fp)
 	while True:
 		with open(fp, 'rb') as f:
 			chunk = f.read(buff_size)
@@ -136,7 +140,7 @@ def fileTransmit(clientPeer_sock):
 def connection(socket):
 	client, addr = socket.accept()
 	ipport = client.getsockname()
-	print('Successfully connect to ', ipport)
+	# print('Successfully connect to ', ipport)
 	client.send('Welcome to P2P community!'.encode())
 	return client, addr
 
@@ -146,7 +150,7 @@ if __name__ == '__main__':
 	peer_port = int(input("Enter the port number: "))
 	server_thread = threading.Thread(target = ToServ, args = [addr, peer_port])
 	server_thread.start()
-	client_thread = threading.Thread(target = ToPeer, args = [peer_port])
+	client_thread = threading.Thread(target = ToPeer, args = [addr, peer_port])
 	client_thread.start()
 
 
